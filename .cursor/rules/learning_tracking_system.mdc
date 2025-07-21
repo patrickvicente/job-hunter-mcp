@@ -1,0 +1,171 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 🧠 Learning Tracking System
+
+## Purpose
+Track user's exposure to new concepts and adjust explanations accordingly. Reinforce concepts that need more understanding.
+
+## How It Works
+- Track concept exposure levels: `beginner`, `intermediate`, `advanced`
+- Adjust explanation depth based on exposure
+- Reinforce concepts that user struggles with
+- Update exposure levels based on demonstrated understanding
+
+## Current Learning Status
+
+### [EXAMPLE] FastAPI
+**Exposure Level**: `intermediate` (actively building APIs)
+**Last Reinforced**: 2025-01-18
+**Key Concepts**:
+- Path and query parameters
+- Dependency injection
+- Pydantic models
+- OpenAPI docs
+
+**Explanation Style**:
+- Use real-world analogies (restaurant menu for endpoints)
+- Show code examples with comments
+- Explain the "why" behind each component
+- Connect to practical API design
+
+### [EXAMPLE] SQLAlchemy ORM
+**Exposure Level**: `beginner` (just started using)
+**Last Reinforced**: Never
+**Key Concepts**:
+- Models and tables
+- Sessions and transactions
+- Relationships (foreign keys)
+- Querying data
+
+**Explanation Style**:
+- Start with simple analogies (spreadsheet rows)
+- Focus on mapping Python to database
+- Show basic model and query examples
+- Avoid advanced config initially
+
+### Git Commit Hygiene & .gitignore Usage
+**Exposure Level**: `intermediate` (actively using git and .gitignore)
+**Last Reinforced**: 2024-06-11
+**Key Concepts**:
+- Writing clear, structured commit messages
+- Using .gitignore to keep the repo clean
+- Avoiding accidental commits of ignored files
+- Tracking learning progress in a dedicated file
+
+**Explanation Style**:
+- Provide commit message templates and examples
+- Explain the purpose of .gitignore and how to use it
+- Show practical git workflows (status, add, commit)
+- Reinforce with real-world analogies and best practices
+
+## Learning Reinforcement Rules
+
+### For Beginner Level Concepts:
+- Start with analogies and real-world examples
+- Avoid technical jargon initially
+- Focus on "what problem does this solve?"
+- Show simple, working examples
+- Reinforce with visual explanations when possible
+
+### For Intermediate Level Concepts:
+- Include code examples with detailed comments
+- Explain the "why" behind design decisions
+- Show practical implementation patterns
+- Connect to business value and use cases
+- Introduce related concepts gradually
+
+### For Advanced Level Concepts:
+- Focus on optimization and best practices
+- Show complex examples with explanations
+- Discuss trade-offs and alternatives
+- Connect to system architecture
+- Prepare for production considerations
+
+## Concept Update Triggers
+- **User asks for explanation**: Increase exposure level
+- **User implements successfully**: Increase exposure level  
+- **User struggles with concept**: Reinforce and keep current level
+- **User demonstrates mastery**: Increase to advanced level
+- **User asks advanced questions**: Increase exposure level
+
+## Explanation Templates
+
+### Beginner Template:
+```
+🎯 [CONCEPT NAME] - Beginner Explanation
+
+📖 What is it?
+[Simple, non-technical definition]
+
+🏢 Real-world analogy:
+[Relatable example from everyday life]
+
+💡 Why do we need it?
+[Business problem it solves]
+
+🔧 Simple example:
+[Basic, working code/configuration]
+
+📚 Key terms to remember:
+- [Term 1]: [Simple definition]
+- [Term 2]: [Simple definition]
+```
+
+### Intermediate Template:
+```
+🎯 [CONCEPT NAME] - Intermediate Deep Dive
+
+📖 Core Concepts:
+[Detailed explanation with technical context]
+
+🏗️ How it works:
+[Architecture and flow explanation]
+
+💻 Implementation Example:
+[Detailed code with comments]
+
+🔍 Key Components:
+- [Component 1]: [Purpose and function]
+- [Component 2]: [Purpose and function]
+
+⚡ Best Practices:
+- [Practice 1]: [Why it matters]
+- [Practice 2]: [Why it matters]
+
+🔗 Related Concepts:
+[Connect to other technologies/concepts]
+```
+
+### Advanced Template:
+```
+🎯 [CONCEPT NAME] - Advanced Implementation
+
+🏗️ Architecture Deep Dive:
+[Complex system design]
+
+⚙️ Advanced Configuration:
+[Production-ready setup]
+
+🔧 Optimization Strategies:
+[Performance and scalability considerations]
+
+🚨 Common Pitfalls:
+[What to avoid and why]
+
+🔗 Integration Patterns:
+[How it works with other systems]
+
+📊 Monitoring & Debugging:
+[Production considerations]
+```
+
+## Update Instructions
+After each explanation:
+1. Assess user's understanding level
+2. Update exposure level if needed
+3. Note any concepts that need reinforcement
+4. Update "Last Reinforced" date
+5. Adjust explanation style for future interactions
