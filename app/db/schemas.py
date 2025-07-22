@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, HttpUrl
 
@@ -77,22 +77,46 @@ class JobRead(JobBase):
     class Config:
         orm_mode = True
 
+class JobUpdate(JobBase):
+    """
+    Schema for updating a job.
+    All fields are optional to allow partial updates.
+    """
+    title: Optional[str] = None
+    description: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    work_mode: Optional['WorkMode'] = None
+    job_type: Optional['JobType'] = None
+    experience_level: Optional['ExperienceLevel'] = None
+    job_category: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    currency: Optional[str] = None
+    visa_sponsorship: Optional[bool] = None
+    url: Optional['HttpUrl'] = None
+    source: Optional['Source'] = None
+    tech_stack: Optional[List[str]] = None
+
+    class Config:
+        orm_mode = True
+
 # --- Resume Schemas --- #
 
 class ResumeBase(BaseModel):
-    """Base schema for resume attributes."""
     name: str
     job_category: Optional[str] = None
-    content: str
+    file_url: str
+    file_type: str
+    parsed_data: Optional[Dict[str, Any]] = None
 
 class ResumeCreate(ResumeBase):
-    """Schema for creating a new resume."""
     pass
 
 class ResumeRead(ResumeBase):
-    """Schema for reading a resume."""
     id: int
     created_at: datetime
+    applications: Optional[List['ApplicationRead']] = None
 
     class Config:
         orm_mode = True
@@ -125,6 +149,12 @@ class ApplicationRead(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ApplicationUpdate(ApplicationBase):
+    """Schema for updating an application."""
+    status: Optional[ApplicationStatus] = None
+    applied_at: Optional[datetime] = None
+    notes: Optional[str] = None
 
 # --- Fit Score Schemas --- #
 

@@ -1,4 +1,4 @@
-from sqlalchemy import ARRAY, Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import ARRAY, JSON, Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime, timezone
@@ -29,9 +29,11 @@ class Job(Base):
 class Resume(Base):
     __tablename__ = "resumes"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    job_category = Column(String) # 'software-engineer', 'data-scientist', 'product-manager', 'designer', 'marketing', 'sales', 'finance', 'hr', 'legal', 'other'
-    content = Column(String)
+    name = Column(String, nullable=False)
+    job_category = Column(String, nullable=True)
+    file_url = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)
+    parsed_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     applications = relationship("Application", back_populates="resume")
 
