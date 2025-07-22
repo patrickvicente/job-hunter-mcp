@@ -60,19 +60,19 @@ def main():
         mode = sys.argv[1].lower()
     else:
         # Fall back to environment variable, default to "mcp"
-        mode = os.environ.get("SERVER_MODE", "mcp").lower()
+        mode = os.environ.get("SERVER_MODE", "fastapi").lower()
     
     # Mode selection - simplified to just fastapi or mcp
-    if mode == "fastapi":
-        run_fastapi()
-    elif mode == "mcp":
-        run_mcp()  # Default mode
+    if mode == "mcp":
+        run_mcp()
+    elif mode == "fastapi":
+        run_fastapi()  # Default mode
     else:
         print(f"❌ Unknown mode: {mode}")
         print("✅ Available modes: mcp (default), fastapi")
         print("\nExamples:")
-        print("  uv run main.py              # Run MCP server")
-        print("  uv run main.py fastapi      # Run FastAPI server")
+        print("  uv run main.py              # Run fastapi server")
+        print("  uv run main.py mcp          # Run MCP server")
         print("  SERVER_MODE=fastapi uv run main.py  # Use environment variable")
         sys.exit(1)
 
