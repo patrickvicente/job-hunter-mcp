@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from app.api.endpoints import jobs, applications, metadata
+from app.api.endpoints import jobs, applications, metadata, mcp_tools
+from app.mcp.server import mcp
+from app.mcp.tools.enrich_job import enrich_job
 
 app = FastAPI()
 
@@ -7,6 +9,7 @@ app = FastAPI()
 app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 app.include_router(applications.router, prefix="/applications", tags=["applications"])
 app.include_router(metadata.router, prefix="/metadata", tags=["metadata"])
+app.include_router(mcp_tools.router, prefix="/mcp", tags=["mcp"])
 
 @app.get("/")
 def read_root():
@@ -17,4 +20,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    mcp.run()

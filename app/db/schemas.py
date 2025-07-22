@@ -102,7 +102,7 @@ class ResumeRead(ResumeBase):
 class ApplicationBase(BaseModel):
     """Base schema for application attributes."""
     job_id: int
-    resume_id: int
+    resume_id: Optional[int] = None
     status: ApplicationStatus = ApplicationStatus.pending
     applied_at: Optional[datetime] = None
     notes: Optional[str] = None
