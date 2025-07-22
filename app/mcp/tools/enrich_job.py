@@ -1,49 +1,106 @@
-from app.core.ai_client import enrich_job_data
-from app.mcp.server import mcp
+"""
+MCP Tool: Enrich Job Data
 
-@mcp.tool()
-def enrich_job(
-    title: str,
-    description: str,
-    company: str = "",
-    location: str = "",
-    job_category: str = "",
-    url: str = "",
-    work_mode: str = "",
-    job_type: str = "",
-    experience_level: str = "",
-    salary_min: int = 0,
-    salary_max: int = 0,
-    currency: str = "",
-    visa_sponsorship: bool = False,
-    source: str = "",
-    tech_stack: list[str] = [],
-    context: dict = None
-) -> dict:
+This tool provides job data enrichment functionality using AI.
+Can work in two modes:
+- backend: Direct AI enrichment (returns enriched data)
+- llm: Returns prompt for LLM client to do enrichment agentically
+"""
+
+from typing import Dict, Any
+from app.mcp.schemas.enrich_job import EnrichJobInput, EnrichJobOutput
+from ...core.ai_client import enrich_job_data
+
+class EnrichJobTool:
     """
-    Enrich job data using AI.
+    Class-based MCP tool for job enrichment.
+    
+    This approach provides better organization, metadata management,
+    and makes it easier to test and maintain.
     """
-    job_data = {
-        "title": title,
-        "description": description,
-        "company": company,
-        "location": location,
-        "job_category": job_category,
-        "url": url,
-        "work_mode": work_mode,
-        "job_type": job_type,
-        "experience_level": experience_level,
-        "salary_min": salary_min,
-        "salary_max": salary_max,
-        "currency": currency,
-        "visa_sponsorship": visa_sponsorship,
-        "source": source,
-        "tech_stack": tech_stack,
-    }
-    enriched = enrich_job_data(job_data, context or {})
-    for key, value in enriched.items():
-        if not job_data.get(key):
-            job_data[key] = value
+    
+    @staticmethod
+    def metadata() -> Dict[str, Any]:
+        """Tool metadata for MCP registration"""
+        return {
+            "name": "enrich_job",
+            "description": "Enrich job data using AI (backend) or return a prompt for LLM client (agentic)",
+            "inputSchema": EnrichJobInput.model_json_schema(),
+            "outputSchema": EnrichJobOutput.model_json_schema()
+        }
+    
+    @staticmethod
+    async def execute(input: EnrichJobInput) -> EnrichJobOutput:
+        """
+        Execute job enrichment tool.
+        
+        Args:
+            input: EnrichJobInput schema with job details
             
-    return job_data
+        Returns:
+            EnrichJobOutput with enriched data or LLM prompt
+        """
+        job_data = input.model_dump(exclude={"context"})
+        context = input.context or {}
+        mode = context.get("mode", "backend")  # default to backend
 
+        if mode == "llm":
+            # Return a prompt for the LLM client to do the enrichment
+            prompt = await EnrichJobTool._generate_llm_prompt(input)
+            return EnrichJobOutput(
+                enriched_data={}, 
+                context={**context, "llm_prompt": prompt, "enrichment_mode": "llm"}
+            )
+        else:
+            # Backend enrichment
+            enriched = await enrich_job_data(job_data, context) if callable(getattr(enrich_job_data, "__await__", None)) else enrich_job_data(job_data, context)
+            for key, value in enriched.items():
+                if not job_data.get(key):
+                    job_data[key] = value
+            return EnrichJobOutput(
+                enriched_data=job_data, 
+                context={**context, "enrichment_mode": "backend"}
+            )
+    
+    @staticmethod
+    async def _generate_llm_prompt(input: EnrichJobInput) -> str:
+        """Generate prompt for LLM client enrichment"""
+        job_data = input.model_dump(exclude={"context"})
+        context = input.context or {}
+        
+        all_fields = [
+            "title", "description", "company", "location", "job_category", "url",
+            "work_mode", "job_type", "experience_level", "salary_min", "salary_max",
+            "currency", "visa_sponsorship", "source", "tech_stack"
+        ]
+        
+        missing_fields = [field for field in all_fields if not job_data.get(field)]
+        
+        prompt = (
+            "You are an AI assistant helping to structure job postings for a job tracking app.\n"
+            f"User context: {context}\n"
+            "Given the following job posting, infer or extract ONLY the following missing fields:\n"
+            f"{', '.join(missing_fields) if missing_fields else 'None (all fields present)'}\n"
+            "Also, always provide a structured summary with the following sections:\n"
+            "About the job\nJob Responsibilities\nRequirements\nPreferred Qualifications\n"
+            "\nKnown job data:\n"
+        )
+        
+        for field in all_fields:
+            prompt += f"{field}: {job_data.get(field, '')}\n"
+            
+        prompt += (
+            "\nRespond ONLY in valid JSON with keys for the missing fields you filled, "
+            "and a 'summary' key (dict with keys: about, responsibilities, requirements, preferred_qualifications)."
+        )
+        
+        return prompt
+
+# Function wrappers for FastMCP compatibility
+async def enrich_job(input: EnrichJobInput) -> EnrichJobOutput:
+    """FastMCP tool wrapper"""
+    return await EnrichJobTool.execute(input)
+
+async def enrich_job_prompt(input: EnrichJobInput) -> str:
+    """FastMCP prompt wrapper"""
+    return await EnrichJobTool._generate_llm_prompt(input)

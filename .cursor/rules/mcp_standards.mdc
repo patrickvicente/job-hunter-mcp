@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+🎯 MCP Standards for Job Hunter MCP — Intermediate Level
+
+---
+
+📖 What is it?
+This document defines the standards and best practices for implementing Model Context Protocol (MCP) features in the Job Hunter MCP Server. It ensures interoperability, security, and clarity for both REST and MCP tool integrations, following the official [MCP specification](mdc:https:/modelcontextprotocol.io/introduction).
+
+---
+
+🏢 Analogy:
+Think of MCP as a “universal remote” for AI tools: it lets any LLM client (like Claude Desktop, Cursor, or others) discover and use your server’s features in a standardized, safe, and context-rich way.
+
+---
+
+💡 Why do we need it?
+- To make all AI-powered features (job search, enrichment, fit scoring, tracking) accessible to LLMs and agentic workflows.
+- To ensure safe, transparent, and user-consented tool execution.
+- To maximize compatibility with the growing ecosystem of MCP clients.
+
+---
+
+🔧 Standards & Best Practices:
+
+### 1. Protocol Compliance
+- MUST implement the MCP base protocol using JSON-RPC 2.0 message format.
+- MUST support stateful connections and capability negotiation.
+- MUST expose all tools, resources, and prompts via MCP-compliant endpoints.
+
+### 2. Tool Design
+- MUST annotate each MCP tool with a clear, human-readable description and parameter schema.
+- SHOULD provide examples of tool usage in the description.
+- MUST ensure all tools are idempotent and side-effect free unless explicitly documented.
+- MUST validate and sanitize all input parameters.
+
+### 3. Context Management
+- MUST support session-based context, allowing LLMs to maintain state across multiple tool invocations.
+- SHOULD structure context as:
+  - system_context (server role, guidelines)
+  - user_context (user preferences, history)
+  - task_context (current operation, constraints)
+  - document_context (relevant docs/data)
+- MUST update and return context with each tool response when relevant.
+
+### 4. Security & Consent
+- MUST require explicit user consent for any data access or tool execution.
+- MUST document all data flows and tool behaviors.
+- MUST never transmit user data to third parties without consent.
+- SHOULD provide clear error messages and logging for all MCP operations.
+
+### 5. Open API & Discoverability
+- MUST expose a `/metadata` endpoint with server info, version, and MCP capabilities.
+- MUST document all MCP tools and endpoints in OpenAPI/Swagger and MCP metadata.
+- SHOULD ensure all endpoints are public and require no authentication (unless privacy needs dictate otherwise).
+
+### 6. Interoperability
+- MUST test all MCP tools with at least two major clients (e.g., Claude Desktop, Cursor).
+- SHOULD follow naming conventions and parameter types compatible with the MCP Python SDK.
+
+### 7. Versioning & Compatibility
+- MUST include protocol and server version in all MCP responses.
+- SHOULD maintain backward compatibility for all public tools and endpoints.
+
+### 8. Error Handling
+- MUST follow JSON-RPC error codes and structure.
+- SHOULD provide actionable error messages for both LLMs and users.
+
+### 9. Extensibility
+- SHOULD design tools and context schemas to be easily extensible for future features (e.g., analytics, automation).
+
+---
+
+⚡ Best Practices:
+- Be explicit: Always describe what each tool does, its parameters, and expected outputs.
+- Prioritize context: Return the most relevant context for each operation.
+- Minimize side effects: Tools should not alter server state unless necessary and documented.
+- Test with real clients: Regularly verify tool usability from LLM clients.
+
+---
+
+🔗 Related Concepts:
+- [MCP Official Specification](mdc:https:/spec.modelcontextprotocol.io/specification)
+- [JSON-RPC 2.0](mdc:https:/www.jsonrpc.org/specification)
+- [OpenAPI/Swagger](mdc:https:/swagger.io/specification)
+- [Pulse MCP Server Directory](mdc:https:/www.pulsemcp.com/servers)
+
+---
+
+This standards file should be updated as the MCP protocol and project requirements evolve.

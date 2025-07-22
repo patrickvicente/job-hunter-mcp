@@ -12,6 +12,7 @@ wheels/
 # Ignore roadmap file and personal rules
 roadmap.md
 .cursor/rules/learning_reinforcement.mdc
+.cursor/rules/mcp_tool_flow.mdc
 
 # environment variables
 .env
