@@ -24,7 +24,7 @@ click==8.2.1
 distro==1.9.0
     # via openai
 fastapi==0.116.1
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 h11==0.16.0
     # via
     #   httpcore
@@ -52,20 +52,20 @@ jsonschema-specifications==2025.4.1
 markdown-it-py==3.0.0
     # via rich
 mcp==1.12.1
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 mdurl==0.1.2
     # via markdown-it-py
 openai==1.97.1
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 packaging==25.0
     # via pytest
 pluggy==1.6.0
     # via pytest
 psycopg2-binary==2.9.10
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 pydantic==2.11.7
     # via
-    #   job-hunter-mcp (pyproject.toml)
+    #   job-hunter-mcp-server (pyproject.toml)
     #   fastapi
     #   mcp
     #   openai
@@ -80,13 +80,13 @@ pygments==2.19.2
     #   rich
 pytest==8.4.1
     # via
-    #   job-hunter-mcp (pyproject.toml)
+    #   job-hunter-mcp-server (pyproject.toml)
     #   pytest-asyncio
 pytest-asyncio==1.1.0
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 python-dotenv==1.1.1
     # via
-    #   job-hunter-mcp (pyproject.toml)
+    #   job-hunter-mcp-server (pyproject.toml)
     #   mcp
     #   pydantic-settings
 python-multipart==0.0.20
@@ -108,7 +108,7 @@ sniffio==1.3.1
     #   anyio
     #   openai
 sqlalchemy==2.0.41
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 sse-starlette==2.4.1
     # via mcp
 starlette==0.47.2
@@ -116,7 +116,7 @@ starlette==0.47.2
     #   fastapi
     #   mcp
 toml==0.10.2
-    # via job-hunter-mcp (pyproject.toml)
+    # via job-hunter-mcp-server (pyproject.toml)
 tqdm==4.67.1
     # via openai
 typer==0.16.0
