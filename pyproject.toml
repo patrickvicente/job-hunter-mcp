@@ -1,5 +1,5 @@
 [project]
-name = "job-hunter-mcp"
+name = "job-hunter-mcp-server"
 version = "0.2.0"
 description = "AI Job Hunter MCP"
 readme = "README.md"
