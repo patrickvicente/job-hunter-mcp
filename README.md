@@ -138,3 +138,169 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## 🌍 Pulse MCP Listing
 
 This project is listed on [Pulse MCP Servers](https://www.pulsemcp.com/servers) for easy discovery and integration with the wider MCP ecosystem.
+
+<details>
+<summary><strong>Job Hunter MCP - Fit Scoring Tool (MCP-Compliant)</strong></summary>
+
+## MCP Tool Compliance
+This tool follows the [MCP Tool Implementation Rules](./app/mcp/rules/mcp_tool_flow.mdc):
+- **Schema:** Pydantic input/output schemas in `app/mcp/schemas/fit_scoring.py` with docstrings and context support.
+- **Tool:** Class-based implementation in `app/mcp/tools/fit_scoring.py` with static methods, backend and agentic mode support, and FastMCP wrappers.
+- **Registration:** Registered in `app/mcp/server.py` and `app/mcp/metadata.py`.
+- **Wrappers:** FastMCP wrappers for both tool and prompt.
+- **Docstrings:** Comprehensive, agentic-friendly docstrings for all public functions.
+- **Testing:** Easily testable in isolation; supports both backend and agentic flows.
+- **Documentation:** This README and code docstrings document usage, parameters, and modes.
+
+## Usage
+
+### Backend Mode (default)
+- The server calls the LLM and returns a fit score, explanation, and recommendation.
+- Example:
+  ```python
+  result = await fit_scoring(job_data, resume_data)
+  # or explicitly
+  result = await fit_scoring(job_data, resume_data, mode="backend")
+  print(result.fit_score, result.explanation, result.recommendation)
+  ```
+
+### Agentic Mode
+- The server returns a prompt for the client/agent to process with their own LLM. No LLM call is made by the server.
+- Example:
+  ```python
+  result = await fit_scoring(job_data, resume_data, mode="agentic")
+  prompt = result.context["llm_prompt"]
+  # Agent runs prompt through its own LLM and parses the result
+  ```
+
+### Prompt Utility
+- The `fit_scoring_prompt` function generates the prompt string for agentic clients or LLMs.
+- Example:
+  ```python
+  prompt = await fit_scoring_prompt(job_data, resume_data, mode="agentic")
+  # Use this prompt with your own LLM
+  ```
+
+## Notes
+- The tool is fully MCP-compliant and supports both backend and agentic workflows.
+- The `mode` parameter determines the behavior; agentic clients must set `mode="agentic"`.
+- See code docstrings for parameter details and further examples.
+
+## Testing
+- **Unit tests** are provided using `pytest` and `pytest-asyncio`, with mocks for LLM calls to ensure fast and reliable testing.
+- You may optionally add integration tests for real LLM/API calls if desired.
+
+</details>
+
+<details>
+<summary><strong>Job Hunter MCP - Enrich Job Tool (MCP-Compliant)</strong></summary>
+
+## MCP Tool Compliance
+This tool follows the [MCP Tool Implementation Rules](./app/mcp/rules/mcp_tool_flow.mdc):
+- **Schema:** Pydantic input/output schemas in `app/mcp/schemas/enrich_job.py` with docstrings and context support.
+- **Tool:** Class-based implementation in `app/mcp/tools/enrich_job.py` with static methods, backend and agentic mode support, and FastMCP wrappers.
+- **Registration:** Registered in `app/mcp/server.py` and `app/mcp/metadata.py`.
+- **Wrappers:** FastMCP wrappers for both tool and prompt.
+- **Docstrings:** Comprehensive, agentic-friendly docstrings for all public functions.
+- **Testing:** Easily testable in isolation; supports both backend and agentic flows.
+- **Documentation:** This README and code docstrings document usage, parameters, and modes.
+
+## Usage
+
+### Backend Mode (default)
+- The server calls the LLM using the centralized async `call_llm` function and returns enriched job data.
+- Example:
+  ```python
+  from app.mcp.schemas.enrich_job import EnrichJobInput
+  from app.mcp.tools.enrich_job import enrich_job
+  
+  input = EnrichJobInput(title="Software Engineer", description="Develop and maintain web applications.")
+  result = await enrich_job(input)
+  print(result.enriched_data)
+  ```
+
+### Agentic Mode
+- The server returns a prompt for the client/agent to process with their own LLM. No LLM call is made by the server.
+- Example:
+  ```python
+  from app.mcp.schemas.enrich_job import EnrichJobInput
+  from app.mcp.tools.enrich_job import enrich_job
+  
+  input = EnrichJobInput(title="Software Engineer", description="Develop and maintain web applications.", context={"mode": "agentic"})
+  result = await enrich_job(input)
+  prompt = result.context["llm_prompt"]
+  # Agent runs prompt through its own LLM and parses the result
+  ```
+
+### Prompt Utility
+- The `enrich_job_prompt` function generates the prompt string for agentic clients or LLMs.
+- Example:
+  ```python
+  from app.mcp.schemas.enrich_job import EnrichJobInput
+  from app.mcp.tools.enrich_job import enrich_job_prompt
+  
+  input = EnrichJobInput(title="Software Engineer", description="Develop and maintain web applications.")
+  prompt = await enrich_job_prompt(input)
+  # Use this prompt with your own LLM
+  ```
+
+## Notes
+- The tool is fully MCP-compliant and supports both backend and agentic workflows.
+- All LLM calls are made through the async `call_llm` abstraction for consistency and testability.
+- The `mode` parameter in the context determines the behavior; agentic clients must set `context={"mode": "agentic"}`.
+- See code docstrings for parameter details and further examples.
+
+## Testing
+- **Unit tests** are provided using `pytest` and `pytest-asyncio`, with mocks for LLM calls to ensure fast and reliable testing.
+- You may optionally add integration tests for real LLM/API calls if desired.
+
+</details>
+
+# 🧪 Testing
+
+This project uses **unit tests** and supports optional **integration tests** for all MCP tools and core logic.
+
+## Test Types
+- **Unit Tests:**
+  - Use `pytest` and `pytest-asyncio` for async test support.
+  - LLM calls are mocked (using `unittest.mock.patch`) to ensure tests are fast, reliable, and do not require network/API keys.
+  - Example: See `tests/test_enrich_job.py` for how the LLM is mocked and tool logic is tested in isolation.
+- **Integration Tests (Optional):**
+  - You can add tests that call real LLMs (OpenAI, etc.) to verify prompt quality and API integration.
+  - These are best run manually or in a separate test suite, as they may be slow, flaky, or incur costs.
+
+## Running Tests
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   pip install pytest pytest-asyncio
+   ```
+2. **Run all tests:**
+   ```bash
+   pytest -v
+   ```
+3. **Run a specific test file:**
+   ```bash
+   pytest tests/test_enrich_job.py
+   ```
+4. **(Optional) Run integration tests:**
+   - Mark integration tests with `@pytest.mark.skip` or a custom marker, and run them manually when needed.
+
+## Example: Mocking LLM Calls
+
+```python
+from unittest.mock import patch
+import json
+
+llm_response = json.dumps({"company": "TestCorp"})
+with patch("app.mcp.tools.enrich_job.call_llm", return_value=llm_response):
+    # ... run your test logic here ...
+```
+
+## Benefits
+- **Fast:** No waiting for real LLMs or network calls.
+- **Reliable:** Tests are deterministic and do not depend on external services.
+- **Safe:** No API keys or costs required for unit tests.
+
+See the `tests/` directory for more examples and patterns.

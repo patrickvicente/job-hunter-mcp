@@ -7,6 +7,8 @@ a unified interface for tool discovery and documentation.
 """
 
 from typing import Dict, Any, List
+
+from app.mcp.tools.fit_scoring import FitScoringTool
 from .tools.enrich_job import EnrichJobTool
 
 class MCPMetadata:
@@ -23,7 +25,7 @@ class MCPMetadata:
     # Registry of all available tool classes
     TOOL_CLASSES = {
         "enrich_job": EnrichJobTool,
-        # Add other tool classes here as you create them
+        "fit_scoring": FitScoringTool,
     }
     
     @classmethod

@@ -4,135 +4,134 @@ MCP Tool: Fit Scoring
 Calculates a classic fit score between a candidate and a job using rule-based logic.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Union, Optional
+from app.core.ai_client import call_llm
 from app.mcp.schemas.fit_scoring import FitScoringInput, FitScoringOutput
-from app.db.session import SessionLocal
-from app.db.models import Job  # Your SQLAlchemy Job model
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class FitScoringTool:
     """
-    Class-based MCP tool for fit scoring.
+    MCP tool for LLM-based fit scoring between a job and a resume.
+    Requires job_data and resume_data (to be provided by backend or agent).
+    Supports both backend (calls LLM) and llm/agentic (returns prompt) workflows.
     """
 
     @staticmethod
     def metadata() -> Dict[str, Any]:
         return {
             "name": "fit_scoring",
-            "description": "Calculates a fit score between a candidate and a job using classic rule-based logic.",
+            "description": "Uses an LLM to score the fit between a job and a resume. Returns a fit_score (0-100), explanation, and recommendation.",
             "inputSchema": FitScoringInput.model_json_schema(),
             "outputSchema": FitScoringOutput.model_json_schema()
         }
 
     @staticmethod
     async def execute(input: FitScoringInput) -> FitScoringOutput:
-        data = input.model_dump(exclude={"context"})
         context = input.context or {}
-        mode = context.get("mode", "backend")
+        mode = context.get("mode", "backend") # backend (DEFAULT) or agentic
+        job_data = input.job_data
+        resume_data = input.resume_data
+        prompt = FitScoringTool._generate_llm_prompt(job_data, resume_data, mode=mode)
 
-        if mode == "llm":
-            prompt = await FitScoringTool._generate_llm_prompt(input)
+        if mode == "agentic":
+            # Return the prompt for the agentic/LLM client to process
             return FitScoringOutput(
                 fit_score=0,
-                breakdown={},
-                explanation="LLM prompt generated.",
-                context={**context, "llm_prompt": prompt, "processing_mode": "llm"}
+                explanation="Prompt generated for agentic LLM client. Use the llm_prompt in context to get the score.",
+                recommendation="",
+                context={**context, "llm_prompt": prompt, "fit_scoring_mode": "agentic"}
             )
         else:
-            db = SessionLocal()
-            job = db.query(Job).get(data["job_id"])
-            if not job:
-                db.close()
+            # Backend/server mode: call the LLM and return the result
+            try:
+                llm_response = await call_llm(prompt)
+                logger.warning(f"LLM raw response: {repr(llm_response)}")
+                result = json.loads(llm_response)
+                logger.warning(f"LLM parsed response: {repr(result)}")
+                return FitScoringOutput(
+                    fit_score=result["fit_score"],
+                    explanation=result["explanation"],
+                    recommendation=result["recommendation"],
+                    context={**context, "llm_prompt": prompt, "fit_scoring_mode": "backend"}
+                )
+            except Exception as e:
                 return FitScoringOutput(
                     fit_score=0,
-                    breakdown={},
-                    explanation="Job not found.",
-                    context=context
+                    explanation=(
+                        "There was an error processing the fit score. "
+                        "The AI did not return a valid response. "
+                        "Please try again later or report to the developer."
+                        f"(Technical details: {e})"
+                    ),
+                    recommendation="",
+                    context={**context, "llm_prompt": prompt, "fit_scoring_mode": "backend"}
                 )
 
-            # --- Classic scoring logic ---
-            score = 0
-            breakdown = {}
-
-            # Skills/Tech Stack (50%)
-            required_skills = set(getattr(job, "tech_stack", []))
-            candidate_skills = set(data.get("candidate_skills", []))
-            skill_match = len(required_skills & candidate_skills) / max(1, len(required_skills))
-            skill_score = int(skill_match * 50)
-            score += skill_score
-            breakdown["skills"] = skill_score
-
-            # Experience (20%)
-            required_exp = getattr(job, "years_experience", 0)
-            candidate_exp = data.get("candidate_experience", 0)
-            if candidate_exp >= required_exp:
-                exp_score = 20
-            elif candidate_exp >= required_exp * 0.75:
-                exp_score = 10
-            else:
-                exp_score = 0
-            score += exp_score
-            breakdown["experience"] = exp_score
-
-            # Location (10%)
-            job_location = getattr(job, "location", "").lower()
-            candidate_location = (data.get("candidate_location") or "").lower()
-            if job_location == candidate_location:
-                loc_score = 10
-            elif job_location == "remote" or data.get("willing_to_relocate", False):
-                loc_score = 5
-            else:
-                loc_score = 0
-            score += loc_score
-            breakdown["location"] = loc_score
-
-            # Job Type (10%)
-            job_type = getattr(job, "type", None)
-            preferred_type = data.get("preferred_type")
-            if job_type and preferred_type and job_type == preferred_type:
-                type_score = 10
-            else:
-                type_score = 0
-            score += type_score
-            breakdown["job_type"] = type_score
-
-            # Other (10%) - reserved for custom logic
-            other_score = 0
-            score += other_score
-            breakdown["other"] = other_score
-
-            db.close()
-
-            explanation = (
-                f"Skills: {breakdown['skills']}/50, "
-                f"Experience: {breakdown['experience']}/20, "
-                f"Location: {breakdown['location']}/10, "
-                f"Job Type: {breakdown['job_type']}/10, "
-                f"Other: {breakdown['other']}/10."
-            )
-
-            return FitScoringOutput(
-                fit_score=min(int(score), 100),
-                breakdown=breakdown,
-                explanation=explanation,
-                context={**context, "processing_mode": "backend"}
-            )
-
     @staticmethod
-    async def _generate_llm_prompt(input: FitScoringInput) -> str:
-        data = input.model_dump(exclude={"context"})
-        context = input.context or {}
+    def _generate_llm_prompt(job_data: Union[Dict[str, Any], str], resume_data: Union[Dict[str, Any], str], mode: str ) -> str:
         prompt = (
-            "You are an AI assistant helping to score candidate fit for a job.\n"
-            f"User context: {context}\n"
-            "Given the following job and candidate data, return a fit score (0-100) and a breakdown:\n"
-            f"Data: {data}\n"
-            "\nRespond ONLY in valid JSON with the expected output format."
+            f"Mode: {mode or 'agentic'}\n"
+            "You are an expert recruiter. Given the following job description and candidate resume, "
+            "score the candidate's fit for the job on a scale of 0-100, and explain your reasoning.\n\n"
+            "PREFERENCE: Make it concise and to the point.\n"
+            "IMPORTANT: Respond ONLY in valid JSON with this format:\n"
+            "{ \"fit_score\": <int>, \"explanation\": <string>, \"recommendation\": <string> }\n\n"
+            "Do not include any text before or after the JSON. Do not use markdown. Output JSON only.\n\n"
+            "Job:\n"
+            f"{job_data}\n\n"
+            "Resume:\n"
+            f"{resume_data}\n"
         )
         return prompt
 
 # FastMCP wrappers
-async def fit_scoring(input: FitScoringInput) -> FitScoringOutput:
+async def fit_scoring(
+    job_data: Union[Dict[str, Any], str],
+    resume_data: Union[Dict[str, Any], str],
+    mode: str = "backend",
+    context: Optional[Dict[str, Any]] = None
+) -> FitScoringOutput:
+    """
+    MCP FastMCP wrapper for fit scoring between a job and a resume.
+
+    - In 'backend' mode (default), the server calls the LLM and returns a fit score, explanation, and recommendation.
+    - In 'agentic' mode, the server returns a prompt for the client/agent to process with their own LLM.
+
+    Args:
+        job_data (dict or str): Job description or structured job data.
+        resume_data (dict or str): Candidate resume or structured resume data.
+        mode (str): 'backend' (default) for server-side LLM call, or 'agentic' for prompt-only mode.
+        context (dict, optional): Additional context for session, user, or preferences. 'mode' will be set automatically.
+
+    Returns:
+        FitScoringOutput: Fit score result (backend) or prompt (agentic).
+    """
+    context = context or {}
+    context["mode"] = mode
+    input = FitScoringInput(job_data=job_data, resume_data=resume_data, context=context)
     return await FitScoringTool.execute(input)
 
-async def fit_scoring_prompt(input: FitScoringInput) -> str:
-    return await FitScoringTool._generate_llm_prompt(input)
+async def fit_scoring_prompt(
+    job_data: Union[Dict[str, Any], str],
+    resume_data: Union[Dict[str, Any], str],
+    mode: str = "backend",
+) -> str:
+    """
+    Generate an LLM prompt for agentic fit scoring between a resume and a job description.
+
+    This function returns the prompt string for agentic clients or LLMs to compute the fit score externally.
+    The prompt instructs the LLM to respond ONLY in valid JSON with fit_score, explanation, and recommendation.
+
+    Args:
+        job_data (dict or str): Job description or structured job data.
+        resume_data (dict or str): Candidate resume or structured resume data.
+        mode (str): 'backend' or 'agentic' (for API symmetry; does not affect prompt content).
+
+    Returns:
+        str: The generated LLM prompt for fit scoring.
+    """
+    return FitScoringTool._generate_llm_prompt(job_data, resume_data, mode=mode)

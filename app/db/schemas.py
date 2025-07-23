@@ -75,7 +75,7 @@ class JobRead(JobBase):
     applications: Optional[List['ApplicationRead']] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class JobUpdate(JobBase):
     """
@@ -99,7 +99,7 @@ class JobUpdate(JobBase):
     tech_stack: Optional[List[str]] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Resume Schemas --- #
 
@@ -119,7 +119,7 @@ class ResumeRead(ResumeBase):
     applications: Optional[List['ApplicationRead']] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # --- Application Schemas --- #
 
@@ -148,7 +148,7 @@ class ApplicationRead(BaseModel):
     resume: Optional['ResumeRead'] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ApplicationUpdate(ApplicationBase):
     """Schema for updating an application."""
@@ -175,7 +175,7 @@ class FitScoreRead(FitScoreBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # For forward references in nested schemas
 defined = globals()

@@ -18,12 +18,18 @@ import sys
 import os
 from fastapi import FastAPI
 from app.api.endpoints import jobs, applications, metadata, mcp_tools, resumes
+import logging
 
 # FastAPI app setup
 app = FastAPI(
     title="Job Hunter API",
     description="Job hunting and tracking API with MCP integration",
     version="1.0.0"
+)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
 # Register routes
@@ -44,7 +50,7 @@ def run_fastapi():
     print("📍 API available at: http://localhost:8000")
     print("📚 Docs available at: http://localhost:8000/docs")
     # Use string import for better uv compatibility
-    uvicorn.run("job_hunter_main_clean:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 def run_mcp():
     """Run MCP server"""
