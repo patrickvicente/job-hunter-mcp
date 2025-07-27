@@ -21,6 +21,7 @@ class Source(str, Enum):
     cryptojobslist = "cryptojobslist"
     upwork = "upwork"
     angellist = "angellist"
+    extension = "extension"  # Added for Chrome extension
     other = "other"
 
 class JobType(str, Enum):
@@ -53,9 +54,9 @@ class JobBase(BaseModel):
     company: str
     location: str
     work_mode: Optional[WorkMode] = WorkMode.onsite
-    job_type: Optional[JobType] = JobType.full_time
+    work_type: Optional[JobType] = JobType.full_time 
     experience_level: Optional[ExperienceLevel] = ExperienceLevel.entry
-    job_category: str
+    category: str  
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     currency: Optional[str] = "AUD"
@@ -87,9 +88,9 @@ class JobUpdate(JobBase):
     company: Optional[str] = None
     location: Optional[str] = None
     work_mode: Optional['WorkMode'] = None
-    job_type: Optional['JobType'] = None
+    work_type: Optional['JobType'] = None
     experience_level: Optional['ExperienceLevel'] = None
-    job_category: Optional[str] = None
+    category: Optional[str] = None 
     salary_min: Optional[int] = None
     salary_max: Optional[int] = None
     currency: Optional[str] = None
@@ -139,22 +140,23 @@ class ApplicationRead(BaseModel):
     """Schema for reading an application, including nested job and resume info."""
     id: int
     job_id: int
-    resume_id: int
+    resume_id: Optional[int] = None
     status: ApplicationStatus = ApplicationStatus.pending
     applied_at: Optional[datetime] = None
     notes: Optional[str] = None
-    created_at: datetime
+    applied_at: Optional[datetime] = None
     job: Optional['JobRead'] = None
     resume: Optional['ResumeRead'] = None
 
     class Config:
         from_attributes = True
 
-class ApplicationUpdate(ApplicationBase):
+class ApplicationUpdate(BaseModel):
     """Schema for updating an application."""
     status: Optional[ApplicationStatus] = None
     applied_at: Optional[datetime] = None
     notes: Optional[str] = None
+    resume_id: Optional[int] = None
 
 # --- Fit Score Schemas --- #
 

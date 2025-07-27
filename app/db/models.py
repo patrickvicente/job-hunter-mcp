@@ -13,9 +13,9 @@ class Job(Base):
     company = Column(String)
     location = Column(String)
     work_mode = Column(String) # 'remote', 'hybrid', 'onsite'
-    job_type = Column(String) # 'full-time', 'part-time', 'contract', 'internship'
+    work_type = Column(String) # 'full-time', 'part-time', 'contract', 'internship'
     experience_level = Column(String) # 'entry', 'junior', 'mid', 'senior', 'lead'
-    job_category = Column(String) # 'software-engineer', 'data-scientist', 'product-manager', 'designer', 'marketing', 'sales', 'finance', 'hr', 'legal', 'other'
+    category = Column(String) # 'software-engineer', 'data-scientist', 'product-manager', 'designer', 'marketing', 'sales', 'finance', 'hr', 'legal', 'other'
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)
     currency = Column(String, nullable=True, default="AUD")
@@ -24,6 +24,8 @@ class Job(Base):
     source = Column(String) # 'seek', 'linkedin', 'jora', 'remotely', 'other'
     tech_stack = Column(ARRAY(String), nullable=True) # 'python', 'javascript', 'java', 'aws', 'sql'
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    posted_date = Column(DateTime, nullable=True)
+    method = Column(String, default="manual") # 'automation', 'manual'
     applications = relationship("Application", back_populates="job")
 
 class Resume(Base):
@@ -40,11 +42,12 @@ class Resume(Base):
 class Application(Base):
     __tablename__ = "applications"
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("jobs.id"))
-    resume_id = Column(Integer, ForeignKey("resumes.id"))
-    status = Column(String, default="pending") # 'pending', 'applied', 'interview', 'offer', 'rejected'
-    applied_at = Column(DateTime, default=datetime.now(timezone.utc))
+    job_id = Column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"))
+    resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="SET NULL"), nullable=True)
+    status = Column(String, default="pending") # 'pending', 'applied', 'interview', 'offer', 'rejected', 'withdrawn', 'archived'
+    applied_at = Column(DateTime, nullable=True)
     notes = Column(String, nullable=True)
+    # Note: category is now in Job model, not Application
 
     job = relationship("Job", back_populates="applications")
     resume = relationship("Resume", back_populates="applications")
@@ -52,8 +55,8 @@ class Application(Base):
 class FitScore(Base):
     __tablename__ = "fit_scores"
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("jobs.id"))
-    resume_id = Column(Integer, ForeignKey("resumes.id"))
+    job_id = Column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"))
+    resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="CASCADE"))
     score = Column(Integer) # 0-100
     explanation = Column(String)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
