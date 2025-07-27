@@ -17,6 +17,7 @@ Usage with python:
 import sys
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import jobs, applications, metadata, mcp_tools, resumes
 import logging
 
@@ -25,6 +26,23 @@ app = FastAPI(
     title="Job Hunter API",
     description="Job hunting and tracking API with MCP integration",
     version="1.0.0"
+)
+
+# Add CORS middleware for Chrome extension support
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "chrome-extension://*",  # All Chrome extensions
+        "http://localhost:*",    # Local development
+        "https://localhost:*",   # Local HTTPS development
+        "http://127.0.0.1:*",    # Local IP development
+        "https://127.0.0.1:*",   # Local HTTPS IP development
+        "*"  # Allow all origins for development (remove in production)
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 logging.basicConfig(
@@ -42,6 +60,29 @@ app.include_router(mcp_tools.router, prefix="/mcp", tags=["mcp"])
 @app.get("/")
 def read_root():
     return {"message": "Job Hunter API - Ready to help you find your dream job!"}
+
+@app.options("/jobs/import-from-extension")
+async def options_import_job():
+    """Handle OPTIONS requests for CORS preflight"""
+    return {"message": "CORS preflight successful"}
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "cors": "enabled"}
+
+@app.get("/test-db")
+def test_db():
+    """Test database connection"""
+    try:
+        from app.db.session import get_db
+        from sqlalchemy import text
+        db = next(get_db())
+        # Try a simple query
+        result = db.execute(text("SELECT 1")).scalar()
+        return {"status": "database_ok", "result": result}
+    except Exception as e:
+        return {"status": "database_error", "error": str(e)}
 
 def run_fastapi():
     """Run FastAPI server"""

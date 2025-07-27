@@ -15,4 +15,5 @@ dependencies = [
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "toml>=0.10.2",
+    "bs4>=0.0.2",
 ]

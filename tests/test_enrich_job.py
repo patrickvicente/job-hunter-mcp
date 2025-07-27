@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from unittest.mock import patch
 from app.mcp.schemas.enrich_job import EnrichJobInput
 from app.mcp.tools.enrich_job import enrich_job, enrich_job_prompt
