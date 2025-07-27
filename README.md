@@ -14,19 +14,33 @@ A personal, open source platform to supercharge your job search, with a focus on
 
 - **Hybrid FastAPI + MCP:** Provides both traditional REST API endpoints and MCP tools for LLM/agent integration.
 - **PostgreSQL:** Used for persistent data storage (jobs, applications, etc.).
-- **job-data-extractor Chrome Extension:** Maintained as a separate component for 1-click job data capture.
+- **Chrome Extension Integration:** REST API endpoints for receiving job data from the Chrome extension.
+- **AI-Powered Tools:** Job enrichment, fit scoring, and application tracking with MCP tools.
+- **ETL Pipeline:** Automated job scraping from multiple sources (Seek, Jora, etc.).
+- **Text Processing:** Advanced job description parsing and keyword extraction.
 - **Optional Integrations:** Streamlit dashboard and n8n automation workflows are supported but not required.
 
 ---
 
 ## 🔧 Features
 
+### Core Features
 - **Visa Sponsorship Job Search:** Scrape and filter jobs by visa type, location, and keywords (REST + MCP).
 - **AI Fit Scoring:** Score your fit for each job using AI and custom logic (REST + MCP).
 - **Resume & Cover Letter Tailoring:** LLM-powered customization for each application (REST + MCP).
 - **Application Tracker:** Add, update, and view applications, statuses, and notes (REST + MCP).
 - **Follow-up Reminders:** Automated reminders for follow-ups and interviews (optional, via n8n, email, or Telegram).
 - **Analytics Dashboard:** Visualize your job search funnel, fit scores, and response times (optional, via Streamlit).
+
+### New Features (Latest Release)
+- **Chrome Extension Integration:** One-click job import from job boards with smart duplicate detection.
+- **ETL Pipeline:** Automated job scraping from Seek, Jora, and other sources with configurable filters.
+- **Advanced Text Processing:** Intelligent job description parsing, section extraction, and keyword identification.
+- **Smart Application Tracking:** Automatic `applied_at` timestamp management and status transitions.
+- **Enhanced Database Schema:** Improved job categorization, work type classification, and metadata tracking.
+- **Notion Export Tool:** Export job data to Notion databases with filtering and batch processing.
+
+### Integration Features
 - **Export/Import:** Export your data to CSV, Notion, or Google Sheets.
 - **Automation:** Use n8n to scrape jobs, send reminders, and sync data (optional).
 - **Open API:** All endpoints are public and documented (Swagger/OpenAPI).
@@ -50,15 +64,19 @@ A personal, open source platform to supercharge your job search, with a focus on
 3. **Set up PostgreSQL:**
    - Start a local or remote PostgreSQL instance.
    - Set your `DATABASE_URL` environment variable.
-4. **Run the server:**
+4. **Run database migrations:**
+   ```bash
+   alembic upgrade head
+   ```
+5. **Run the server:**
    ```bash
    uvicorn main:app --reload
    ```
-5. **(Optional) Launch Streamlit dashboard:**
+6. **(Optional) Launch Streamlit dashboard:**
    ```bash
    streamlit run dashboard.py
    ```
-6. **(Optional) Start n8n for automation:**
+7. **(Optional) Start n8n for automation:**
    - See `/automation/` for workflow templates.
 
 ---
@@ -69,18 +87,30 @@ All endpoints are public and require no authentication.
 
 ### REST API Endpoints
 
+#### Core Endpoints
 - `/metadata` — Server Info
-- `/jobs/search` — Search for Jobs
+- `/jobs/` — Job CRUD operations
+- `/jobs/search` — Search for Jobs with filters
 - `/jobs/score` — Get Fit Score
 - `/resume/tailor` — Tailor Resume/Cover Letter
 - `/applications` — Application tracking endpoints
 
+#### Chrome Extension Integration
+- `/jobs/import-from-extension` — Import job data from Chrome extension
+- `/jobs/check-url` — Check if job URL already exists (duplicate detection)
+
+#### ETL & Automation
+- `/jobs/fetch` — Trigger ETL job scraping (if configured)
+- `/jobs/export` — Export jobs to various formats
+
 ### MCP Tools
 
-- **Job Search Tool:** Search for jobs using keywords, location, and visa filters.
-- **Job Enrichment Tool:** Extract and enrich job details from URLs or text.
-- **Application Tracking Tool:** Track job applications, statuses, and notes.
+- **Job Enrichment Tool:** Extract and enrich job details from URLs or text using AI.
 - **Fit Scoring Tool:** Analyze how well a job matches your skills and preferences.
+- **Application Tracking Tool:** Track job applications, statuses, and notes.
+- **Export to Notion Tool:** Export job data to Notion databases with filtering.
+
+**Note:** Job import is handled via REST API (`/jobs/import-from-extension`) for efficiency and cost-effectiveness.
 
 #### Example: Using MCP Tools with Claude Desktop or Cursor
 
@@ -90,13 +120,103 @@ All endpoints are public and require no authentication.
    - "Enrich this job posting: [URL]"
    - "Track my application to Atlassian."
    - "How well do I fit this job?"
+   - "Export my recent applications to Notion."
 
 ---
 
-## 🧩 Chrome Extension: job-data-extractor
+## 🧩 Chrome Extension Integration
 
-- The `job-data-extractor` Chrome extension is maintained as a separate component for 1-click job data capture from job boards.
-- Data can be sent directly to the server or exported for later use.
+### Features
+- **One-Click Import:** Capture job data directly from job boards with a single click.
+- **Smart Duplicate Detection:** Automatically detects if a job URL already exists in your database.
+- **Background Processing:** Job enrichment happens asynchronously without blocking the import.
+- **Flexible Data Capture:** Supports various job board formats and data structures.
+
+### Integration Flow
+1. Chrome extension scrapes job data from the current page
+2. Data is sent to `/jobs/import-from-extension` endpoint
+3. Server processes and stores the job data
+4. Application record is created automatically
+5. AI enrichment runs in the background
+6. Extension receives confirmation and processed data
+
+### Endpoint Details
+- **POST `/jobs/import-from-extension`:** Main import endpoint
+- **GET `/jobs/check-url`:** Check for existing jobs by URL
+- **PATCH `/applications/{id}/status`:** Update application status
+
+---
+
+## 🔄 ETL Pipeline
+
+### Automated Job Scraping
+The ETL pipeline automatically scrapes jobs from multiple sources:
+
+- **Seek.com.au:** Primary Australian job board with API and web scraping
+- **Jora.com:** Secondary job board with web scraping
+- **Configurable Sources:** Easy to add new job sources via YAML configuration
+
+### Features
+- **Intelligent Filtering:** Filter by keywords, location, salary range, work type
+- **Duplicate Prevention:** Skip jobs that already exist in the database
+- **Rate Limiting:** Respectful scraping with configurable delays
+- **Error Handling:** Robust error handling and logging
+- **Batch Processing:** Process multiple jobs efficiently
+
+### Configuration
+Edit `app/etl/config.yaml` to customize:
+- Job sources and their parameters
+- Search filters and keywords
+- Rate limiting and timeouts
+- Data extraction selectors
+
+### Usage
+```bash
+# Run ETL pipeline manually
+python -m app.etl.fetch_jobs
+
+# Or trigger via API
+curl -X POST http://localhost:8000/jobs/fetch
+```
+
+---
+
+## 📊 Enhanced Text Processing
+
+### Job Description Analysis
+The text processor provides intelligent analysis of job descriptions:
+
+- **Section Extraction:** Automatically identifies and extracts common sections (About, Requirements, Responsibilities, Benefits)
+- **Keyword Extraction:** Identifies technical skills, tools, and job-related keywords
+- **Salary Parsing:** Extracts and normalizes salary information from various formats
+- **Date Parsing:** Converts various date formats to ISO standard
+- **Text Cleaning:** Normalizes and cleans job description text
+
+### Usage
+```python
+from app.core.text_processor import process_job_description
+
+# Process a job description
+result = process_job_description(job_description_text)
+print(result["keywords"])  # ['python', 'aws', 'sql', 'agile']
+print(result["description_structured"]["requirements"])  # Requirements section
+```
+
+---
+
+## 🗄️ Database Schema Updates
+
+### Recent Changes
+- **Enhanced Job Model:** Added `work_type`, `category`, `posted_date`, `method` fields
+- **Improved Categorization:** Better job categorization and classification
+- **Application Tracking:** Smart `applied_at` timestamp management
+- **Metadata Tracking:** Added source tracking and import method information
+
+### Migration
+Run database migrations to apply schema changes:
+```bash
+alembic upgrade head
+```
 
 ---
 
@@ -253,6 +373,60 @@ This tool follows the [MCP Tool Implementation Rules](./app/mcp/rules/mcp_tool_f
 ## Testing
 - **Unit tests** are provided using `pytest` and `pytest-asyncio`, with mocks for LLM calls to ensure fast and reliable testing.
 - You may optionally add integration tests for real LLM/API calls if desired.
+
+</details>
+
+<details>
+<summary><strong>Job Hunter MCP - Export to Notion Tool (MCP-Compliant)</strong></summary>
+
+## MCP Tool Compliance
+This tool follows the [MCP Tool Implementation Rules](./app/mcp/rules/mcp_tool_flow.mdc):
+- **Schema:** Pydantic input/output schemas in `app/mcp/schemas/export_to_notion.py` with docstrings and context support.
+- **Tool:** Class-based implementation in `app/mcp/tools/export_to_notion.py` with static methods, backend and agentic mode support, and FastMCP wrappers.
+- **Registration:** Registered in `app/mcp/server.py` and `app/mcp/metadata.py`.
+- **Wrappers:** FastMCP wrappers for both tool and prompt.
+- **Docstrings:** Comprehensive, agentic-friendly docstrings for all public functions.
+- **Testing:** Easily testable in isolation; supports both backend and agentic flows.
+- **Documentation:** This README and code docstrings document usage, parameters, and modes.
+
+## Usage
+
+### Backend Mode (default)
+- The server exports job data directly to Notion and returns export results.
+- Example:
+  ```python
+  from app.mcp.schemas.export_to_notion import ExportToNotionInput, NotionExportConfig
+  from app.mcp.tools.export_to_notion import export_to_notion
+  
+  config = NotionExportConfig(
+      notion_token="your_token",
+      database_id="your_database_id"
+  )
+  input = ExportToNotionInput(config=config)
+  result = await export_to_notion(input)
+  print(f"Exported {result.exported} jobs to Notion")
+  ```
+
+### Agentic Mode
+- The server returns a prompt for the client/agent to process with their own LLM.
+- Example:
+  ```python
+  input = ExportToNotionInput(config=config, context={"mode": "agentic"})
+  result = await export_to_notion(input)
+  prompt = result.context["llm_prompt"]
+  # Agent runs prompt through its own LLM and parses the result
+  ```
+
+## Features
+- **Batch Export:** Export jobs in configurable batches
+- **Filtering:** Filter jobs by source, company, location, date range, status
+- **Progress Tracking:** Track export progress and handle errors gracefully
+- **Update Existing:** Option to update existing Notion pages or create new ones
+
+## Notes
+- The tool is fully MCP-compliant and supports both backend and agentic workflows.
+- Requires Notion integration token and database ID for configuration.
+- See code docstrings for parameter details and further examples.
 
 </details>
 

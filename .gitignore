@@ -16,3 +16,7 @@ roadmap.md
 
 # environment variables
 .env
+
+/scraper
+/.secrets
+/.archive
